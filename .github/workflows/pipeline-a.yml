@@ -26,6 +26,11 @@ jobs:
           echo "Timeout"
           exit 1
 
+      - name: Notify data available
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
+            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}&text=GEFS 00Z data available — dispatching collector"
+
       - name: Dispatch
         run: |
           curl -s -X POST \
