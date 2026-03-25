@@ -31,10 +31,18 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
             -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}&text=GEFS 18Z (6pm UTC) data available — dispatching collector"
 
-      - name: Dispatch
+      - name: Dispatch snapshot collector
         run: |
           curl -s -X POST \
             -H "Authorization: token ${{ secrets.TARGET_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${{ secrets.TARGET_REPO }}/actions/workflows/snapshot-18z.yml/dispatches" \
+            -d '{"ref":"main"}'
+
+      - name: Dispatch trade executor
+        run: |
+          curl -s -X POST \
+            -H "Authorization: token ${{ secrets.TARGET_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ secrets.TARGET_REPO }}/actions/workflows/trade-18z.yml/dispatches" \
             -d '{"ref":"main"}'
