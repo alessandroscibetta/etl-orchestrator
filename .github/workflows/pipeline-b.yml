@@ -1,0 +1,35 @@
+name: Pipeline B
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - name: Wait for data
+        run: |
+          DATE=$(date -u +%Y%m%d)
+          URL="https://noaa-gefs-pds.s3.amazonaws.com/gefs.${DATE}/06/atmos/pgrb2ap5/geavg.t06z.pgrb2a.0p50.f006"
+          for i in $(seq 1 30); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --head "$URL")
+            if [ "$STATUS" = "200" ]; then
+              echo "Ready"
+              exit 0
+            fi
+            echo "Check $i/30 — not ready (${STATUS})"
+            sleep 120
+          done
+          echo "Timeout"
+          exit 1
+
+      - name: Dispatch
+        run: |
+          curl -s -X POST \
+            -H "Authorization: token ${{ secrets.TARGET_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ secrets.TARGET_REPO }}/actions/workflows/snapshot-06z.yml/dispatches" \
+            -d '{"ref":"main"}'
